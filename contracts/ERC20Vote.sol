@@ -10,10 +10,11 @@ contract ERC20Vote is ERC20 {
     uint256 public _currentNumberVotesToChangePrice;
     uint256 public _suggestedPrice;
 
-    mapping(address => bool) alreadyVoted;
+    mapping(address => bool) public alreadyVoted;
 
     enum VOTE_STATE {
         OPEN,
+        CALCULATING_WINNERS,
         CLOSED
     }
     VOTE_STATE public voteState;
@@ -70,11 +71,10 @@ contract ERC20Vote is ERC20 {
 
         voteState = VOTE_STATE.OPEN;
         _currentNumberVotesToChangePrice += amountTokensToVote;
-        (_suggestedPrice, _duration, _votingStartedTime) = (
-            suggestedPrice_,
-            duration,
-            _time()
-        );
+        _suggestedPrice = suggestedPrice_;
+        _duration = duration;
+        _votingStartedTime = _time();
+
         alreadyVoted[msg.sender] = true;
 
         emit VotingStart(msg.sender, suggestedPrice_, duration);
@@ -86,7 +86,7 @@ contract ERC20Vote is ERC20 {
         uint256 votingEndTime = _votingStartedTime + _duration;
 
         if (time >= votingEndTime) {
-            voteState == VOTE_STATE.CLOSED;
+            voteState == VOTE_STATE.CALCULATING_WINNERS;
         }
         require(
             voteState == VOTE_STATE.OPEN,
@@ -107,10 +107,10 @@ contract ERC20Vote is ERC20 {
         uint256 votingEndTime = _votingStartedTime + _duration;
 
         if (time >= votingEndTime) {
-            voteState == VOTE_STATE.CLOSED;
+            voteState == VOTE_STATE.CALCULATING_WINNERS;
         }
         require(
-            voteState == VOTE_STATE.CLOSED,
+            voteState == VOTE_STATE.CALCULATING_WINNERS,
             "Voting is not over yet. Closing the vote is prohibited!"
         );
 

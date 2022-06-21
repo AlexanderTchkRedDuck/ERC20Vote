@@ -32,7 +32,7 @@ contract ERC20 is IERC20 {
         balanceOf[msg.sender] = totalSupply; // Give the creator all initial tokens
         name = tokenName; // Set the name for display purposes
         symbol = tokenSymbol; // Set the symbol for display purposes
-        price = price * 10**decimals;
+        _price = price * 10**decimals;
     }
 
     function getPrice() public view returns (uint256) {

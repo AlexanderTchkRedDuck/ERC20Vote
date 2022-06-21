@@ -8,5 +8,7 @@ compiler:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.6.0'
 networks:
   default: development
+  ganache-local:
+    verify: False
 wallets:
   from_key: ${PRIVATE_KEY}
