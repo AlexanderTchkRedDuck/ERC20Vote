@@ -13,7 +13,7 @@ NORMOLIZE = 10 ** -18
 def deploy_ERC20Vote():
     print("Staring deploy ERC20Vote...")
     account = get_account()
-    lottery = ERC20Vote.deploy(
+    vote = ERC20Vote.deploy(
         INITIAL_SUPPLY,
         NAME,
         SYMBOL,
@@ -22,7 +22,7 @@ def deploy_ERC20Vote():
         publish_source=config["networks"][network.show_active()].get("verify", False)
     )
     print("Deployed ERC20Vote!!!", "\n")
-    return lottery
+    return vote
 
 def start_voting():
     account = get_account()
@@ -67,5 +67,5 @@ def buy_token(account, value):
 def main():
     deploy_ERC20Vote()
     start_voting()
-    vote()
+    # vote()
     # end_voting()

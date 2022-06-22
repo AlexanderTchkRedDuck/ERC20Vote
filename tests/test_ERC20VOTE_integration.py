@@ -3,76 +3,39 @@ from web3 import Web3
 import pytest
 from scripts.deploy import deploy_ERC20Vote, buy_token, INITIAL_PRICE, INITIAL_SUPPLY
 from scripts.helpful_scripts import LOCAL_BLOCKCHAIN_ENVIRONMENTS, get_account
+import time
 
 NORMOLIZE = 10 ** -18
 SUGGESTED_PRICE = 1
-DURATION = 60
+DURATION = 5
+NUMBER_OF_PARTICIPANTS = 5
 
-def test_threshold_to_vote_amount():
-    # Arrange 
-    vote = deploy_ERC20Vote()
-    threshold_to_vote = Web3.toWei(INITIAL_SUPPLY, "ether") * 0.05
-    # Act
-    getThresholdToVote = vote.getThresholdToVote()
-    # Assert
-    assert  getThresholdToVote == threshold_to_vote
-
-def test_buing_tokens():
+def test_voting_process():
     # Arrange
-    vote = deploy_ERC20Vote()
-    account = get_account(index=1)
-    price = vote.getPrice() * NORMOLIZE
-    amount_of_purchased_tokens = Web3.toWei(1, "ether")
-    eth_amount = price * amount_of_purchased_tokens
-    # Act
-    buy_token(account, value=eth_amount) 
-    # Assert
-    assert vote.balanceOf(account) == amount_of_purchased_tokens
-
-def test_requirements_before_startVoting():
-    # Arrange
-    vote = deploy_ERC20Vote()
+    # Deploying
     account = get_account()
-    # Act/Assert
-    assert vote.voteState() == 2
-    assert vote.balanceOf(account) > vote.getThresholdToVote()
-
-def test_startVoting():
-    # Arrange
     vote = deploy_ERC20Vote()
-    account = get_account(index=1)
+    total_tokens_vots = 0
+    vote.startVoting(SUGGESTED_PRICE, DURATION, {"from": account})
+    total_tokens_vots += vote.balanceOf(account)
+    # Voting
     price = vote.getPrice() * NORMOLIZE
     amount_of_purchased_tokens = vote.getThresholdToVote() * 1.1 #Have to increase, becouse threshold will be increased
     eth_amount = price * amount_of_purchased_tokens
-    # TODO
-    # Ask a question about 'price' and changing getThresholdToVote after buying tokens
-    # Act
-    buy_token(account, value=(eth_amount))
-    vote.startVoting(SUGGESTED_PRICE, DURATION, {"from": account})
-    # Assert
-    assert vote.balanceOf(account) >= vote.getThresholdToVote()
-    assert vote.voteState() == 0
-    # TODO: Why we got additional 50???
-    #assert vote._currentNumberVotesToChangePrice() == amount_of_purchased_tokens
-    assert vote._suggestedPrice() == SUGGESTED_PRICE
-    assert vote._duration() == DURATION
-    assert vote.alreadyVoted(account) == True
+    voting_accounts = {}
 
-def test_vote_without_starting():
-    # Arrange
-    vote = deploy_ERC20Vote()
-    account = get_account(index=1)
-    # ACT / Assert
-    with pytest.raises(exceptions.VirtualMachineError):
-        vote.vote({"from": account})
+    for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+            account = get_account(index=i)
+            buy_token(account, value=(eth_amount * float(f"1.{i}")))
+            voting_accounts[i] = account
+            total_tokens_vots += vote.balanceOf(account)
+            vote.vote({"from": account})
+            assert vote.alreadyVoted(account) == True
+            assert vote._currentNumberVotesToChangePrice() == total_tokens_vots
+    time.sleep(7)
+    # vote.endVoting()
+    # assert vote.voteState() == 1
 
-def test_close_vote_without_starting():
-    # Arrange
-    vote = deploy_ERC20Vote()
-    account = get_account(index=1)
-    # ACT / Assert
-    with pytest.raises(exceptions.VirtualMachineError):
-        vote.endVoting({"from": account})
 
     
 
